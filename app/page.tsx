@@ -1,113 +1,497 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast, Toaster } from "react-hot-toast";
+import {
+  PlusCircle,
+  CheckCircle,
+  XCircle,
+  Gift,
+  Medal,
+  RotateCcw,
+} from "lucide-react";
+
+interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  status: "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  points: number;
+}
+
+interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  pointCost: number;
+  claimed: boolean;
+  userId: string | null;
+}
+
+export default function Dashboard() {
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [newRewardTitle, setNewRewardTitle] = useState("");
+  const [newRewardDescription, setNewRewardDescription] = useState("");
+  const [newRewardPointCost, setNewRewardPointCost] = useState(0);
+  const [isLoadingRewards, setIsLoadingRewards] = useState(true);
+  const [isSubmittingReward, setIsSubmittingReward] = useState(false);
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [newGoalDescription, setNewGoalDescription] = useState("");
+  const [newGoalPoints, setNewGoalPoints] = useState(0);
+  const [isLoadingGoals, setIsLoadingGoals] = useState(true);
+  const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [activeTab, setActiveTab] = useState("goals");
+
+  useEffect(() => {
+    if (isUserLoaded && user) {
+      fetchGoals();
+      fetchRewards();
+    }
+  }, [isUserLoaded, user]);
+
+  useEffect(() => {
+    const completedPoints = goals
+      .filter((goal) => goal.status === "COMPLETED")
+      .reduce((sum, goal) => sum + goal.points, 0);
+    setTotalPoints(completedPoints);
+  }, [goals]);
+
+  const fetchGoals = async () => {
+    setIsLoadingGoals(true);
+    try {
+      const response = await fetch("/api/goals");
+      if (!response.ok) throw new Error("Failed to fetch goals");
+      const data = await response.json();
+      setGoals(data);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      toast.error("Failed to fetch goals");
+    } finally {
+      setIsLoadingGoals(false);
+    }
+  };
+
+  const fetchRewards = async () => {
+    setIsLoadingRewards(true);
+    try {
+      const response = await fetch("/api/rewards");
+      if (!response.ok) throw new Error("Failed to fetch rewards");
+      const data = await response.json();
+      setRewards(data);
+    } catch (error) {
+      console.error("Error fetching rewards:", error);
+      toast.error("Failed to fetch rewards");
+    } finally {
+      setIsLoadingRewards(false);
+    }
+  };
+
+  const createReward = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRewardTitle.trim() || newRewardPointCost <= 0) return;
+    setIsSubmittingReward(true);
+
+    try {
+      const response = await fetch("/api/rewards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newRewardTitle,
+          description: newRewardDescription,
+          pointCost: newRewardPointCost,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to create reward");
+
+      setNewRewardTitle("");
+      setNewRewardDescription("");
+      setNewRewardPointCost(0);
+      fetchRewards();
+      toast.success("Reward created successfully!");
+    } catch (error) {
+      console.error("Error creating reward:", error);
+      toast.error("Failed to create reward");
+    } finally {
+      setIsSubmittingReward(false);
+    }
+  };
+
+  const createGoal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGoalTitle.trim() || newGoalPoints <= 0) return;
+    setIsSubmittingGoal(true);
+
+    try {
+      const response = await fetch("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newGoalTitle,
+          description: newGoalDescription,
+          points: newGoalPoints,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to create goal");
+
+      setNewGoalTitle("");
+      setNewGoalDescription("");
+      setNewGoalPoints(0);
+      fetchGoals();
+      toast.success("Goal created successfully!");
+    } catch (error) {
+      console.error("Error creating goal:", error);
+      toast.error("Failed to create goal");
+    } finally {
+      setIsSubmittingGoal(false);
+    }
+  };
+
+  const updateGoalStatus = async (id: string, newStatus: Goal["status"]) => {
+    try {
+      const response = await fetch(`/api/goals/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update goal");
+
+      fetchGoals();
+      toast.success("Goal updated successfully!");
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      toast.error("Failed to update goal");
+    }
+  };
+
+  const deleteGoal = async (id: string) => {
+    try {
+      const response = await fetch(`/api/goals/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete goal");
+
+      fetchGoals();
+      toast.success("Goal deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      toast.error("Failed to delete goal");
+    }
+  };
+
+  const claimReward = async (id: string) => {
+    const reward = rewards.find((r) => r.id === id);
+    if (!reward || reward.claimed || totalPoints < reward.pointCost) return;
+
+    try {
+      const response = await fetch(`/api/rewards/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claimed: true }),
+      });
+
+      if (!response.ok) throw new Error("Failed to claim reward");
+
+      setRewards(
+        rewards.map((r) => (r.id === id ? { ...r, claimed: true } : r))
+      );
+      setTotalPoints((prevPoints) => prevPoints - reward.pointCost);
+      toast.success("Reward claimed successfully!");
+    } catch (error) {
+      console.error("Error claiming reward:", error);
+      toast.error("Failed to claim reward");
+    }
+  };
+
+  if (!isUserLoaded) {
+    return <div>Loading user data...</div>;
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="container mx-auto p-4">
+      <Toaster position="top-right" />
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Welcome, {user?.firstName}!</h1>
+        <div className="flex items-center bg-yellow-100 rounded-full px-4 py-2">
+          <Medal className="text-yellow-500 mr-2" />
+          <span className="font-bold">Total Points: {totalPoints}</span>
         </div>
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      <Tabs defaultValue="goals" onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="goals">Goals</TabsTrigger>
+          <TabsTrigger value="rewards">Rewards</TabsTrigger>
+        </TabsList>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+        {activeTab === "goals" && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Create New Goal</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={createGoal} className="space-y-4">
+                <Input
+                  type="text"
+                  value={newGoalTitle}
+                  onChange={(e) => setNewGoalTitle(e.target.value)}
+                  placeholder="Enter goal title"
+                  disabled={isSubmittingGoal}
+                />
+                <Input
+                  type="text"
+                  value={newGoalDescription}
+                  onChange={(e) => setNewGoalDescription(e.target.value)}
+                  placeholder="Enter goal description (optional)"
+                  disabled={isSubmittingGoal}
+                />
+                <Input
+                  type="number"
+                  value={newGoalPoints}
+                  onChange={(e) => setNewGoalPoints(parseInt(e.target.value))}
+                  placeholder="Enter point value"
+                  disabled={isSubmittingGoal}
+                />
+                <Button type="submit" disabled={isSubmittingGoal}>
+                  {isSubmittingGoal ? (
+                    <>
+                      <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Goal
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+        {activeTab === "rewards" && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Create New Reward</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={createReward} className="space-y-4">
+                <Input
+                  type="text"
+                  value={newRewardTitle}
+                  onChange={(e) => setNewRewardTitle(e.target.value)}
+                  placeholder="Enter reward title"
+                  disabled={isSubmittingReward}
+                />
+                <Input
+                  type="text"
+                  value={newRewardDescription}
+                  onChange={(e) => setNewRewardDescription(e.target.value)}
+                  placeholder="Enter reward description (optional)"
+                  disabled={isSubmittingReward}
+                />
+                <Input
+                  type="number"
+                  value={newRewardPointCost}
+                  onChange={(e) =>
+                    setNewRewardPointCost(parseInt(e.target.value))
+                  }
+                  placeholder="Enter point cost"
+                  disabled={isSubmittingReward}
+                />
+                <Button type="submit" disabled={isSubmittingReward}>
+                  {isSubmittingReward ? (
+                    <>
+                      <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Reward
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+        <TabsContent value="goals">
+          <GoalList
+            goals={goals}
+            isLoading={isLoadingGoals}
+            updateGoalStatus={updateGoalStatus}
+            deleteGoal={deleteGoal}
+          />
+        </TabsContent>
+        <TabsContent value="rewards">
+          <RewardList
+            rewards={rewards}
+            isLoading={isLoadingRewards}
+            totalPoints={totalPoints}
+            claimReward={claimReward}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
+
+interface GoalListProps {
+  goals: Goal[];
+  isLoading: boolean;
+  updateGoalStatus: (id: string, newStatus: Goal["status"]) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+}
+
+const GoalList: React.FC<GoalListProps> = ({
+  goals,
+  isLoading,
+  updateGoalStatus,
+  deleteGoal,
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <Skeleton className="h-4 w-[250px]" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-[200px]" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (goals.length === 0) {
+    return <p>No goals found. Start by creating a new goal!</p>;
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {goals.map((goal) => (
+        <Card key={goal.id}>
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              {goal.title}
+              <Badge
+                variant={goal.status === "COMPLETED" ? "secondary" : "default"}
+              >
+                {goal.status}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{goal.description}</p>
+            <p className="font-bold mt-2">Points: {goal.points}</p>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            {goal.status !== "COMPLETED" && (
+              <Button
+                onClick={() => updateGoalStatus(goal.id, "COMPLETED")}
+                variant="outline"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" /> Complete
+              </Button>
+            )}
+            {goal.status === "COMPLETED" && (
+              <Button
+                onClick={() => updateGoalStatus(goal.id, "IN_PROGRESS")}
+                variant="outline"
+              >
+                Reopen
+              </Button>
+            )}
+            <Button onClick={() => deleteGoal(goal.id)} variant="destructive">
+              <XCircle className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+interface RewardListProps {
+  rewards: Reward[];
+  isLoading: boolean;
+  totalPoints: number;
+  claimReward: (id: string) => Promise<void>;
+}
+
+const RewardList: React.FC<RewardListProps> = ({
+  rewards,
+  isLoading,
+  totalPoints,
+  claimReward,
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <Skeleton className="h-4 w-[250px]" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-[200px]" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (rewards.length === 0) {
+    return <p>No rewards available. Check back later!</p>;
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {rewards.map((reward) => (
+        <Card key={reward.id}>
+          <CardHeader>
+            <CardTitle>{reward.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{reward.description}</p>
+            <p className="font-bold mt-2">Cost: {reward.pointCost} points</p>
+          </CardContent>
+          <CardFooter>
+            <Button
+              onClick={() => claimReward(reward.id)}
+              disabled={reward.claimed || totalPoints < reward.pointCost}
+              variant={reward.claimed ? "secondary" : "default"}
+            >
+              <Gift className="mr-2 h-4 w-4" />
+              {reward.claimed ? "Claimed" : "Claim Reward"}
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+};
