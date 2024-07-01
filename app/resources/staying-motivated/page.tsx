@@ -42,12 +42,13 @@ const sections = [
     ),
   },
   {
-    title: "Remember Your 'Why'",
+    title: "Remember Your &apos;Why&apos;",
     content: (
       <p>
         Regularly remind yourself why you set this goal in the first place.
-        Connect with your deeper motivation. Use GoalQuest's goal description
-        field to clearly state your 'why' for each goal you set.
+        Connect with your deeper motivation. Use GoalQuest&apos;s goal
+        description field to clearly state your &apos;why&apos; for each goal
+        you set.
       </p>
     ),
   },

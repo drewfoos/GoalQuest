@@ -147,7 +147,7 @@ const LoggedInHomePage: React.FC = () => {
           Welcome, {user.firstName}!
         </h1>
         <p className="text-xl text-gray-600 mb-8">
-          Let's make today count towards your goals.
+          Let&apos;s make today count towards your goals.
         </p>
 
         <Card className="mb-8 border-2 border-blue-200">

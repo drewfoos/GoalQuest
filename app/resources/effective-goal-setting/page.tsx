@@ -20,8 +20,8 @@ const sections = [
             progress.
           </li>
           <li>
-            <strong>Achievable:</strong> Make sure it's possible to achieve the
-            goal.
+            <strong>Achievable:</strong> Make sure it&apos;s possible to achieve
+            the goal.
           </li>
           <li>
             <strong>Relevant:</strong> The goal should align with your broader
