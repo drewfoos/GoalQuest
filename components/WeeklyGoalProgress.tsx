@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -9,58 +9,17 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface DailyGoalCount {
   day: string;
   count: number;
 }
 
-const WeeklyGoalProgress: React.FC = () => {
-  const [data, setData] = useState<DailyGoalCount[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface WeeklyGoalProgressProps {
+  data: DailyGoalCount[];
+}
 
-  useEffect(() => {
-    const fetchWeeklyProgress = async () => {
-      try {
-        // Replace this with your actual API call
-        const response = await fetch("/api/goals/weekly-progress");
-        if (!response.ok) throw new Error("Failed to fetch weekly progress");
-        const weeklyData = await response.json();
-        setData(weeklyData);
-      } catch (error) {
-        console.error("Error fetching weekly progress:", error);
-        // Set some dummy data in case of error
-        setData([
-          { day: "Mon", count: 0 },
-          { day: "Tue", count: 0 },
-          { day: "Wed", count: 0 },
-          { day: "Thu", count: 0 },
-          { day: "Fri", count: 0 },
-          { day: "Sat", count: 0 },
-          { day: "Sun", count: 0 },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchWeeklyProgress();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Weekly Goal Progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[200px] w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
+const WeeklyGoalProgress: React.FC<WeeklyGoalProgressProps> = ({ data }) => {
   return (
     <Card>
       <CardHeader>
