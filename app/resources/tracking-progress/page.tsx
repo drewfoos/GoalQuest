@@ -6,8 +6,8 @@ const sections = [
     content: (
       <p>
         Break your goal into smaller, measurable milestones. This makes it
-        easier to track progress and stay motivated. Use GoalQuest's sub-tasks
-        feature to create and track these milestones effectively.
+        easier to track progress and stay motivated. Use GoalQuest&apos;s
+        sub-tasks feature to create and track these milestones effectively.
       </p>
     ),
   },
@@ -26,7 +26,7 @@ const sections = [
     content: (
       <p>
         Write down your daily or weekly progress. This helps you reflect on your
-        journey and identify areas for improvement. Use GoalQuest's notes
+        journey and identify areas for improvement. Use GoalQuest&apos;s notes
         feature to maintain a digital goal journal alongside your progress
         tracking.
       </p>
@@ -36,8 +36,8 @@ const sections = [
     title: "Leverage Visual Aids",
     content: (
       <p>
-        Utilize GoalQuest's charts and progress bars to visually represent your
-        advancement towards your goals. Visual representations can provide
+        Utilize GoalQuest&apos;s charts and progress bars to visually represent
+        your advancement towards your goals. Visual representations can provide
         powerful motivation and clarity on your progress.
       </p>
     ),
@@ -47,7 +47,7 @@ const sections = [
     content: (
       <p>
         Set reminders in GoalQuest to review your progress regularly, whether
-        it's daily, weekly, or monthly, depending on your goal. Consistent
+        it&apos;s daily, weekly, or monthly, depending on your goal. Consistent
         check-ins help you stay accountable and make necessary adjustments to
         your approach.
       </p>
