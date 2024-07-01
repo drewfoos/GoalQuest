@@ -2,12 +2,15 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   CheckCircle,
   Target,
   Trophy,
   LucideIcon,
+  Quote,
+  PlayCircle,
 } from "lucide-react";
 
 interface FeatureCardProps {
@@ -15,6 +18,42 @@ interface FeatureCardProps {
   title: string;
   description: string;
 }
+
+interface ReviewCardProps {
+  quote: string;
+  author: string;
+  role: string;
+  imageSrc: string;
+}
+
+const ReviewCard: React.FC<ReviewCardProps> = ({
+  quote,
+  author,
+  role,
+  imageSrc,
+}) => {
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="mb-4">
+        <Quote className="h-6 w-6 text-blue-500 mb-2" />
+        <p className="text-gray-700 italic">{quote}</p>
+      </div>
+      <div className="flex items-center mt-4">
+        <Image
+          src={imageSrc}
+          alt={author}
+          width={56}
+          height={56}
+          className="rounded-full mr-4"
+        />
+        <div>
+          <div className="font-semibold text-gray-900">{author}</div>
+          <div className="text-sm text-gray-500">{role}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FeatureCard: React.FC<FeatureCardProps> = ({
   icon,
@@ -32,7 +71,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white">
       {/* Hero Section */}
       <section className="px-4 py-20 md:py-32 max-w-7xl mx-auto">
         <div className="text-center">
@@ -71,7 +110,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-gray-50 py-20">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-gray-900">
             Why Choose GoalQuest?
@@ -91,6 +130,71 @@ export default function LandingPage() {
               icon={<Trophy className="h-12 w-12 text-yellow-500" />}
               title="Celebrate Wins"
               description="Acknowledge your achievements, big and small. Build momentum through consistent progress."
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-1/2 mb-8 md:mb-0">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+                Discover How GoalQuest Works
+              </h2>
+              <p className="text-xl mb-6 text-gray-600">
+                Watch our quick demo video to see how easy it is to set, track,
+                and achieve your goals with GoalQuest.
+              </p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full text-lg inline-flex items-center">
+                <PlayCircle className="mr-2 h-5 w-5" />
+                Watch Demo
+              </Button>
+            </div>
+            <div className="md:w-1/2">
+              <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-xl">
+                <Image
+                  src="/images/demo-video-placeholder.jpg"
+                  alt="GoalQuest Demo Video"
+                  width={640}
+                  height={360}
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-16 text-center text-gray-900">
+            What Our Users Say
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <ReviewCard
+              quote="GoalQuest has transformed how I approach my goals. It's intuitive and keeps me accountable. I've achieved more in the last month than I did all of last year!"
+              author="Sarah J."
+              role="Marketing Manager"
+              imageSrc="/images/sarah.png"
+            />
+            <ReviewCard
+              quote="The progress tracking is fantastic. It keeps me motivated and focused on achieving my objectives. I use it for both personal and professional goals."
+              author="Michael C."
+              role="Fitness Enthusiast"
+              imageSrc="/images/michael-chen.png"
+            />
+            <ReviewCard
+              quote="As a student, GoalQuest helps me balance academics and extracurriculars. It's a game-changer! I'm more organized and less stressed about deadlines."
+              author="Emily R."
+              role="University Student"
+              imageSrc="/images/emily.png"
+            />
+            <ReviewCard
+              quote="I've tried many goal-setting apps, but GoalQuest stands out. Its simplicity and effectiveness have made a real difference in my productivity."
+              author="David L."
+              role="Entrepreneur"
+              imageSrc="/images/david.png"
             />
           </div>
         </div>

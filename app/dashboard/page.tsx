@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import WeeklyGoalProgress from "@/components/WeeklyGoalProgress";
+import GoalForm from "@/components/GoalForm";
+import RewardForm from "@/components/RewardForm";
 import {
   Card,
   CardContent,
@@ -15,14 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast, Toaster } from "react-hot-toast";
-import {
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Gift,
-  Medal,
-  RotateCcw,
-} from "lucide-react";
+import { CheckCircle, XCircle, Gift, Medal, RotateCcw } from "lucide-react";
 
 interface Goal {
   id: string;
@@ -45,16 +40,8 @@ export default function Dashboard() {
   const { user, isLoaded: isUserLoaded } = useUser();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
-  const [newRewardTitle, setNewRewardTitle] = useState("");
-  const [newRewardDescription, setNewRewardDescription] = useState("");
-  const [newRewardPointCost, setNewRewardPointCost] = useState(0);
   const [isLoadingRewards, setIsLoadingRewards] = useState(true);
-  const [isSubmittingReward, setIsSubmittingReward] = useState(false);
-  const [newGoalTitle, setNewGoalTitle] = useState("");
-  const [newGoalDescription, setNewGoalDescription] = useState("");
-  const [newGoalPoints, setNewGoalPoints] = useState(0);
   const [isLoadingGoals, setIsLoadingGoals] = useState(true);
-  const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [totalPoints, setTotalPoints] = useState(0);
   const [activeTab, setActiveTab] = useState("goals");
@@ -103,65 +90,49 @@ export default function Dashboard() {
     }
   };
 
-  const createReward = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRewardTitle.trim() || newRewardPointCost <= 0) return;
-    setIsSubmittingReward(true);
-
+  const createReward = async (rewardData: {
+    title: string;
+    description: string;
+    pointCost: number;
+  }) => {
     try {
       const response = await fetch("/api/rewards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newRewardTitle,
-          description: newRewardDescription,
-          pointCost: newRewardPointCost,
-        }),
+        body: JSON.stringify(rewardData),
       });
 
       if (!response.ok) throw new Error("Failed to create reward");
 
-      setNewRewardTitle("");
-      setNewRewardDescription("");
-      setNewRewardPointCost(0);
-      fetchRewards();
+      const newReward = await response.json();
+      setRewards([...rewards, newReward]);
       toast.success("Reward created successfully!");
     } catch (error) {
       console.error("Error creating reward:", error);
       toast.error("Failed to create reward");
-    } finally {
-      setIsSubmittingReward(false);
     }
   };
 
-  const createGoal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGoalTitle.trim() || newGoalPoints <= 0) return;
-    setIsSubmittingGoal(true);
-
+  const createGoal = async (goalData: {
+    title: string;
+    description: string;
+    points: number;
+  }) => {
     try {
       const response = await fetch("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newGoalTitle,
-          description: newGoalDescription,
-          points: newGoalPoints,
-        }),
+        body: JSON.stringify(goalData),
       });
 
       if (!response.ok) throw new Error("Failed to create goal");
 
-      setNewGoalTitle("");
-      setNewGoalDescription("");
-      setNewGoalPoints(0);
-      fetchGoals();
+      const newGoal = await response.json();
+      setGoals([...goals, newGoal]);
       toast.success("Goal created successfully!");
     } catch (error) {
       console.error("Error creating goal:", error);
       toast.error("Failed to create goal");
-    } finally {
-      setIsSubmittingGoal(false);
     }
   };
 
@@ -249,97 +220,19 @@ export default function Dashboard() {
 
         {activeTab === "goals" && (
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Create New Goal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={createGoal} className="space-y-4">
-                <Input
-                  type="text"
-                  value={newGoalTitle}
-                  onChange={(e) => setNewGoalTitle(e.target.value)}
-                  placeholder="Enter goal title"
-                  disabled={isSubmittingGoal}
-                />
-                <Input
-                  type="text"
-                  value={newGoalDescription}
-                  onChange={(e) => setNewGoalDescription(e.target.value)}
-                  placeholder="Enter goal description (optional)"
-                  disabled={isSubmittingGoal}
-                />
-                <Input
-                  type="number"
-                  value={newGoalPoints}
-                  onChange={(e) => setNewGoalPoints(parseInt(e.target.value))}
-                  placeholder="Enter point value"
-                  disabled={isSubmittingGoal}
-                />
-                <Button type="submit" disabled={isSubmittingGoal}>
-                  {isSubmittingGoal ? (
-                    <>
-                      <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Goal
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
+            <GoalForm onSubmit={createGoal} />
           </Card>
         )}
 
         {activeTab === "rewards" && (
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Create New Reward</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={createReward} className="space-y-4">
-                <Input
-                  type="text"
-                  value={newRewardTitle}
-                  onChange={(e) => setNewRewardTitle(e.target.value)}
-                  placeholder="Enter reward title"
-                  disabled={isSubmittingReward}
-                />
-                <Input
-                  type="text"
-                  value={newRewardDescription}
-                  onChange={(e) => setNewRewardDescription(e.target.value)}
-                  placeholder="Enter reward description (optional)"
-                  disabled={isSubmittingReward}
-                />
-                <Input
-                  type="number"
-                  value={newRewardPointCost}
-                  onChange={(e) =>
-                    setNewRewardPointCost(parseInt(e.target.value))
-                  }
-                  placeholder="Enter point cost"
-                  disabled={isSubmittingReward}
-                />
-                <Button type="submit" disabled={isSubmittingReward}>
-                  {isSubmittingReward ? (
-                    <>
-                      <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Reward
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
+            <RewardForm onSubmit={createReward} />
           </Card>
         )}
-
         <TabsContent value="goals">
+          <section className="mb-4">
+            <h2 className="text-2xl font-semibold">Your Goals</h2>
+          </section>
           <GoalList
             goals={goals}
             isLoading={isLoadingGoals}
@@ -347,8 +240,15 @@ export default function Dashboard() {
             deleteGoal={deleteGoal}
             deletingGoalId={deletingGoalId}
           />
+          <section>
+            <h2 className="text-2xl font-semibold mb-4 mt-8">
+              Weekly Progress
+            </h2>
+            <WeeklyGoalProgress />
+          </section>
         </TabsContent>
         <TabsContent value="rewards">
+          <h2 className="text-2xl font-semibold mb-4">Available Rewards</h2>
           <RewardList
             rewards={rewards}
             isLoading={isLoadingRewards}
