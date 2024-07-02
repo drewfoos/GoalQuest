@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth, UserButton, SignInButton } from "@clerk/nextjs";
 import { Dumbbell, Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const { isSignedIn, isLoaded } = useAuth();
@@ -41,13 +40,15 @@ const Header = () => {
         </Link>
 
         {/* Hamburger menu button for mobile */}
-        <button
-          className="lg:hidden"
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {isSignedIn && (
+          <button
+            className="lg:hidden"
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
 
         {/* Desktop navigation */}
         <nav className="hidden lg:flex items-center space-x-6">
@@ -83,37 +84,24 @@ const Header = () => {
       </div>
 
       {/* Mobile navigation */}
-      {isMenuOpen && (
+      {isSignedIn && isMenuOpen && (
         <nav className="lg:hidden mt-4 pb-4">
           <ul className="flex flex-col space-y-4 items-center">
             <li>
               <Link
-                href="/"
+                href="/dashboard"
                 className="block py-2 hover:underline"
                 onClick={toggleMenu}
               >
-                Home
+                Dashboard
               </Link>
             </li>
-            {isSignedIn && (
-              <>
-                <li>
-                  <Link
-                    href="/dashboard"
-                    className="block py-2 hover:underline"
-                    onClick={toggleMenu}
-                  >
-                    Dashboard
-                  </Link>
-                </li>
-                <li className="py-2 flex items-center justify-center">
-                  <UserButton
-                    afterSignOutUrl="/"
-                    appearance={userButtonAppearance}
-                  />
-                </li>
-              </>
-            )}
+            <li className="py-2 flex items-center justify-center">
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={userButtonAppearance}
+              />
+            </li>
           </ul>
         </nav>
       )}
