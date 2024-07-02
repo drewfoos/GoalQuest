@@ -127,19 +127,6 @@ const Header = () => {
                 </li>
               </>
             )}
-            {!isSignedIn && (
-              <li className="py-2">
-                <SignInButton mode="modal">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary"
-                  >
-                    Sign In
-                  </Button>
-                </SignInButton>
-              </li>
-            )}
           </ul>
         </nav>
       )}
