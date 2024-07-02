@@ -9,7 +9,15 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "GoalQuest",
-  description: "Set, track, and achieve your goals",
+  description: "Set and track your goals with ease",
+  themeColor: "#000000",
+  manifest: "/manifest.json",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GoalQuest",
+  },
 };
 
 export default function RootLayout({
