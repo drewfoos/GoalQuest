@@ -1,17 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth, UserButton, SignInButton } from "@clerk/nextjs";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const { isSignedIn, isLoaded } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!isLoaded) {
     return null; // or a loading spinner
   }
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const userButtonAppearance = {
+    elements: {
+      avatarBox:
+        "w-12 h-12 border-2 border-primary-foreground hover:border-primary-foreground/80 transition-colors",
+      userButtonPopoverCard: "bg-primary shadow-lg",
+      userButtonPopoverActions: "text-primary-foreground",
+      userButtonPopoverActionButton:
+        "hover:bg-primary-foreground/10 transition-colors",
+    },
+  };
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md">
@@ -23,7 +39,18 @@ const Header = () => {
           <Dumbbell size={36} className="text-primary-foreground" />
           <span className="text-2xl font-bold tracking-tight">GoalQuest</span>
         </Link>
-        <nav>
+
+        {/* Hamburger menu button for mobile */}
+        <button
+          className="lg:hidden"
+          onClick={toggleMenu}
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Desktop navigation */}
+        <nav className="hidden lg:flex items-center space-x-6">
           <ul className="flex items-center space-x-6">
             {isSignedIn && (
               <>
@@ -43,26 +70,79 @@ const Header = () => {
                     Dashboard
                   </Link>
                 </li>
-                <li>
+                <li className="flex items-center justify-center">
                   <UserButton
                     afterSignOutUrl="/"
-                    appearance={{
-                      elements: {
-                        avatarBox:
-                          "w-10 h-10 border-2 border-primary-foreground hover:border-primary-foreground/80 transition-colors",
-                        userButtonPopoverCard: "bg-primary shadow-lg",
-                        userButtonPopoverActions: "text-primary-foreground",
-                        userButtonPopoverActionButton:
-                          "hover:bg-primary-foreground/10 transition-colors",
-                      },
-                    }}
+                    appearance={userButtonAppearance}
                   />
                 </li>
               </>
             )}
+            {!isSignedIn && (
+              <li>
+                <SignInButton mode="modal">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                  >
+                    Sign In
+                  </Button>
+                </SignInButton>
+              </li>
+            )}
           </ul>
         </nav>
       </div>
+
+      {/* Mobile navigation */}
+      {isMenuOpen && (
+        <nav className="lg:hidden mt-4 pb-4">
+          <ul className="flex flex-col space-y-4 items-center">
+            <li>
+              <Link
+                href="/"
+                className="block py-2 hover:underline"
+                onClick={toggleMenu}
+              >
+                Home
+              </Link>
+            </li>
+            {isSignedIn && (
+              <>
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="block py-2 hover:underline"
+                    onClick={toggleMenu}
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+                <li className="py-2 flex items-center justify-center">
+                  <UserButton
+                    afterSignOutUrl="/"
+                    appearance={userButtonAppearance}
+                  />
+                </li>
+              </>
+            )}
+            {!isSignedIn && (
+              <li className="py-2">
+                <SignInButton mode="modal">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                  >
+                    Sign In
+                  </Button>
+                </SignInButton>
+              </li>
+            )}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 };
